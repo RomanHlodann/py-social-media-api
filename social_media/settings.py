@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "ninja_jwt",
     "users",
     "posts",
+    "comments",
 ]
 
 MIDDLEWARE = [
