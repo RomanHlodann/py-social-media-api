@@ -5,6 +5,7 @@ from ninja_jwt.authentication import JWTAuth
 from posts.models import Post
 from posts.schemas import PostSchema, PostCreationSchema, PostUpdateSchema
 from users.schemas import Error
+from comments.api import CommentController
 
 
 api = NinjaExtraAPI(urls_namespace="post-api")
