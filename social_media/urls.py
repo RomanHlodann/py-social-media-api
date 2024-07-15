@@ -19,8 +19,10 @@ from django.contrib import admin
 from django.urls import path
 
 from users.api import api as user_api
+from posts.api import api as post_api
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/users/", user_api.urls),
+    path("api/posts/", post_api.urls),
 ]
