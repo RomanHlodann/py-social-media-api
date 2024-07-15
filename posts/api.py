@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from ninja_extra import NinjaExtraAPI, api_controller, route, permissions
+from ninja_extra import NinjaExtraAPI, api_controller, route
 from ninja_jwt.authentication import JWTAuth
 
 from posts.models import Post
@@ -10,7 +10,7 @@ from users.schemas import Error
 api = NinjaExtraAPI(urls_namespace="post-api")
 
 
-@api_controller("/", permissions=[permissions.IsAuthenticatedOrReadOnly])
+@api_controller
 class PostController:
     @route.get("/", response=list[PostSchema])
     def get_posts(self):
