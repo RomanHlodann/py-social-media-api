@@ -13,4 +13,4 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        return f"Created at {self.created_at} by {self.user.username}"
+        return f"Post by {self.user.username}"
