@@ -1,7 +1,12 @@
+from django.db.models import Count
+from django.db.models.functions.datetime import TruncDay
 from django.shortcuts import get_object_or_404
-from ninja_extra import api_controller, route
+from django.db import models
+from ninja_extra import api_controller, route, permissions
 from ninja_jwt.authentication import JWTAuth
+from ninja import Query
 from better_profanity import profanity
+from datetime import date
 
 from comments.models import Comment
 from comments.schemas import (
@@ -15,6 +20,29 @@ from users.schemas import Error
 
 @api_controller
 class CommentController:
+    @route.get(
+        "/comments-daily-breakdown/",
+        auth=JWTAuth(),
+        permissions=[permissions.IsAdminUser],
+        response=dict
+    )
+    def get_analytics(
+            self,
+            request,
+            date_from: date = Query(...),
+            date_to: date = Query(date.today())
+    ):
+        queryset = Comment.objects.filter(
+            created_at__date__gte=date_from,
+            created_at__date__lte=date_to
+        ).annotate(day=TruncDay("created_at")).values("day").annotate(
+            created_count=Count("id"),
+            blocked_count=Count("id", filter=models.Q(is_blocked=True))
+        ).values("day", "created_count", "blocked_count")
+
+        results = list(queryset)
+        return {"results": results}
+
     @route.get("/{post_id}/comments/", response=list[CommentSchema])
     def get_comments_to_post(self, post_id: int):
         return Comment.objects.filter(post_id=post_id, is_blocked=False)

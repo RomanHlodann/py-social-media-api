@@ -79,4 +79,4 @@ class PostController:
         return 200
 
 
-api.register_controllers(PostController, CommentController)
+api.register_controllers(CommentController, PostController)
