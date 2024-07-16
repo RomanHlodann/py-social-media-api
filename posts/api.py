@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from ninja_extra import NinjaExtraAPI, api_controller, route
 from ninja_jwt.authentication import JWTAuth
+from better_profanity import profanity
 
 from posts.models import Post
 from posts.schemas import PostSchema, PostCreationSchema, PostUpdateSchema
@@ -17,11 +18,23 @@ class PostController:
     def get_posts(self):
         return Post.objects.all()
 
-    @route.post("/", response=PostSchema, auth=JWTAuth())
+    @route.post(
+        "/",
+        response={200: PostSchema, 401: Error, 400: Error},
+        auth=JWTAuth()
+    )
     def create_post(self, request, post: PostCreationSchema):
         post_data = post.model_dump()
         user_id = request.user.id
+
         post_model = Post.objects.create(**post_data, user_id=user_id)
+
+        if (profanity.contains_profanity(post_data["title"])
+                or profanity.contains_profanity(post_data["content"])):
+            post_model.is_blocked = True
+            post_model.save()
+            return 400, {"message": "Post contains profanity"}
+
         return post_model
 
     @route.get("/{post_id}/", response=PostSchema)
@@ -30,7 +43,7 @@ class PostController:
 
     @route.patch(
         "/{post_id}/",
-        response={200: PostSchema, 401: Error},
+        response={200: PostSchema, 401: Error, 400: Error},
         auth=JWTAuth()
     )
     def update_post(self, request, post_id: int, new_post: PostUpdateSchema):
@@ -42,6 +55,12 @@ class PostController:
         for attr, value in new_post.model_dump().items():
             if value:
                 setattr(post, attr, value)
+
+        if (profanity.contains_profanity(new_post["title"])
+                or profanity.contains_profanity(new_post["content"])):
+            post.is_blocked = True
+            post.save()
+            return 400, {"message": "Post contains profanity"}
 
         post.save()
         return post
