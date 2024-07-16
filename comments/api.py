@@ -8,6 +8,8 @@ from comments.schemas import (
     CommentSchema,
     CommentCreationSchema
 )
+from posts.tasks import send_auto_reply
+from posts.models import Post
 from users.schemas import Error
 
 
@@ -16,6 +18,20 @@ class CommentController:
     @route.get("/{post_id}/comments/", response=list[CommentSchema])
     def get_comments_to_post(self, post_id: int):
         return Comment.objects.filter(post_id=post_id, is_blocked=False)
+
+    @staticmethod
+    def create_task_to_reply(
+            user_id: int,
+            post_id: int,
+            comment: str
+    ):
+        post = get_object_or_404(Post, id=post_id)
+        if post.user.id == user_id or not post.auto_reply_enabled:
+            return
+        send_auto_reply.apply_async(
+            args=[post_id, post.user.id, comment],
+            countdown=post.auto_reply_delay * 60
+        )
 
     @route.post(
         "/{post_id}/comments/",
@@ -34,6 +50,8 @@ class CommentController:
             comment_model.is_blocked = True
             comment_model.save()
             return 400, {"message": "Comment contains profanity"}
+
+        self.create_task_to_reply(request.user.id, post_id, comment_model.comment)
 
         return comment_model
 
