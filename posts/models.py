@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 class Post(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
+    is_blocked = models.BooleanField(default=False)
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,

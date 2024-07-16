@@ -9,6 +9,7 @@ class Comment(models.Model):
         Post, on_delete=models.CASCADE, related_name="comments"
     )
     comment = models.TextField()
+    is_blocked = models.BooleanField(default=False)
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
