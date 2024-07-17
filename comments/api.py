@@ -50,14 +50,13 @@ class CommentController:
     @staticmethod
     def create_task_to_reply(
             user_id: int,
-            post_id: int,
+            post: Post,
             comment: str
     ):
-        post = get_object_or_404(Post, id=post_id)
         if post.user.id == user_id or not post.auto_reply_enabled:
             return
         send_auto_reply.apply_async(
-            args=[post_id, post.user.id, comment],
+            args=[post.id, post.user.id, comment],
             countdown=post.auto_reply_delay * 60
         )
 
@@ -67,6 +66,8 @@ class CommentController:
         auth=JWTAuth()
     )
     def create_comment(self, request, post_id: int, comment: CommentCreationSchema):
+        post = get_object_or_404(Post, id=post_id)
+
         comment_data = comment.model_dump()
         user_id = request.user.id
 
@@ -79,7 +80,7 @@ class CommentController:
             comment_model.save()
             return 400, {"message": "Comment contains profanity"}
 
-        self.create_task_to_reply(request.user.id, post_id, comment_model.comment)
+        self.create_task_to_reply(request.user.id, post, comment_model.comment)
 
         return comment_model
 
