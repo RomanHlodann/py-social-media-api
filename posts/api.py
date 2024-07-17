@@ -20,7 +20,7 @@ class PostController:
 
     @route.post(
         "/",
-        response={200: PostSchema, 401: Error, 400: Error},
+        response={201: PostSchema, 401: Error, 400: Error},
         auth=JWTAuth()
     )
     def create_post(self, request, post: PostCreationSchema):
@@ -35,7 +35,7 @@ class PostController:
             post_model.save()
             return 400, {"message": "Post contains profanity"}
 
-        return post_model
+        return 201, post_model
 
     @route.get("/{post_id}/", response=PostSchema)
     def get_post(self, post_id: int):
@@ -50,7 +50,7 @@ class PostController:
         post = get_object_or_404(Post, id=post_id)
 
         if post.user.id != request.user.id and not request.user.is_staff:
-            return 401, {"message": "Post can be changed only by author or admin"}
+            return 400, {"message": "Post can be changed only by author or admin"}
 
         for attr, value in new_post.model_dump().items():
             if value:
@@ -67,16 +67,17 @@ class PostController:
 
     @route.delete(
         "/{post_id}/",
+        response={200: str, 401: Error, 400: Error},
         auth=JWTAuth()
     )
     def delete_post(self, request, post_id: int):
         post = get_object_or_404(Post, id=post_id)
 
         if post.user.id != request.user.id and not request.user.is_staff:
-            return 401, {"message": "Post can be deleted only by author or admin"}
+            return 400, {"message": "Post can be deleted only by author or admin"}
 
         post.delete()
-        return 200
+        return "Post was deleted"
 
 
 api.register_controllers(CommentController, PostController)

@@ -62,7 +62,7 @@ class CommentController:
 
     @route.post(
         "/{post_id}/comments/",
-        response={200: CommentSchema, 400: Error},
+        response={201: CommentSchema, 400: Error},
         auth=JWTAuth()
     )
     def create_comment(self, request, post_id: int, comment: CommentCreationSchema):
@@ -72,7 +72,7 @@ class CommentController:
         user_id = request.user.id
 
         comment_model = Comment.objects.create(
-            **comment_data, user_id=user_id, post_id=post_id
+            **comment_data, user_id=user_id, post_id=post.id
         )
 
         if profanity.contains_profanity(comment_data["comment"]):
@@ -82,7 +82,7 @@ class CommentController:
 
         self.create_task_to_reply(request.user.id, post, comment_model.comment)
 
-        return comment_model
+        return 201, comment_model
 
     @route.patch(
         "/{post_id}/comments/{comment_id}/",
@@ -93,7 +93,7 @@ class CommentController:
         comment = get_object_or_404(Comment, id=comment_id)
 
         if comment.user.id != request.user.id and not request.user.is_staff:
-            return 401, {"message": "Comment can be changed only by author or admin"}
+            return 400, {"message": "Comment can be changed only by author or admin"}
 
         for attr, value in new_comment.model_dump().items():
             if value:
