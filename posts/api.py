@@ -56,8 +56,8 @@ class PostController:
             if value:
                 setattr(post, attr, value)
 
-        if (profanity.contains_profanity(new_post["title"])
-                or profanity.contains_profanity(new_post["content"])):
+        if (profanity.contains_profanity(post.title)
+                or profanity.contains_profanity(post.content)):
             post.is_blocked = True
             post.save()
             return 400, {"message": "Post contains profanity"}
