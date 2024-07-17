@@ -108,13 +108,14 @@ class CommentController:
 
     @route.delete(
         "/{post_id}/comments/{comment_id}/",
+        response={200: str, 401: Error, 400: Error},
         auth=JWTAuth()
     )
     def delete_comment(self, request, comment_id: int):
         comment = get_object_or_404(Comment, id=comment_id)
 
         if comment.user.id != request.user.id and not request.user.is_staff:
-            return 401, {"message": "Comment can be deleted only by author or admin"}
+            return 400, {"message": "Comment can be deleted only by author or admin"}
 
         comment.delete()
-        return 200
+        return "Comment was deleted"
