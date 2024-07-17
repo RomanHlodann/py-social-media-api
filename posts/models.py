@@ -13,7 +13,7 @@ class Post(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     auto_reply_enabled = models.BooleanField(default=False)
-    auto_reply_delay = models.IntegerField(default=0)
+    auto_reply_delay = models.FloatField(default=0)
 
     def __str__(self) -> str:
         return f"Post by {self.user.username}"
